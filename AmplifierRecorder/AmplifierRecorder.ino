@@ -26,14 +26,14 @@ int pressTime = 1000;
 //state variables
 const int states = 2;
 int state = 0;
-/*  state 0 -> No Recording
+/*  state -1 -> error
+ *  state 0 -> No Recording
  *  state 1 -> Recording
  */
 bool recording = false;
 
 
 //SD Card
-
 const int chipSelect = BUILTIN_SDCARD;
 int fileNum = 0;
 
@@ -43,11 +43,14 @@ HX711 loadCell;
 
 
 void setup() {
-  // put your setup code here, to run once:
+  //Begin Serial
   Serial.begin(9600);
+  
+  //Setup Pins
   pinMode(LED_PIN, OUTPUT);
   pinMode(BUTTON_PIN, INPUT_PULLUP);
-
+  
+  //Setup Functions
   digitalWrite(LED_PIN, HIGH);
   incrementFileNum();
   setupSDCard();
@@ -59,23 +62,21 @@ void setup() {
 
 void loop() {
 
-
   checkButton();
-
-
+  
   switch (state){
-    case -1:
+    case -1: //Error State
       LED = !LED;
       digitalWrite(LED_PIN, LED);
       delay(500);
       break;
-    case 0: 
+    case 0: //Normal State
       normal();
       break;
-    case 1: 
+    case 1: //Recording State
       record();
       break;
-    default:
+    default: //Should not reach
       Serial.println("Case Error");
       break;
   }
@@ -85,20 +86,20 @@ void loop() {
 
 void record(){
 
-  digitalWrite(LED_PIN, HIGH);
+  digitalWrite(LED_PIN, HIGH); //Turn LED on
 
+  // Start Recording if not recording
   if (!recording)
   {
-    recording = true;
+    recording = true; 
     incrementFileNum();
   }
   else
   {
-     // make a string for assembling the data to log:
+     // Make a string for assembling the data to log:
     String dataString = String(fileNum); 
   
     // grab a timestamp
-  
     unsigned long t = millis();
     int tim[2];
     tim[0] = (t/1000)%60;
@@ -113,20 +114,21 @@ void record(){
       else dataString += ",";
     }
 
+    // Grab the data from the HX711 and apply calibration
     dataString += String((loadCell.read() +560614) * 0.000107) + ",";
     dataString += String(loadCell.read());
      
-    
+    // Open the data file
     File dataFile = SD.open("dataLog.csv", FILE_WRITE);
   
-    // if the file is available, write to it:
+    // If the file is available, write to it:
     if (dataFile) {
       dataFile.println(dataString);
       dataFile.close();
       // print to the serial port too:
       Serial.println(dataString);
     }  
-    // if the file isn't open, pop up an error:
+    // if the file isn't open, pop up an error and set the state to Error
     else {
       Serial.println("error opening datalog.csv");
       state = -1;
@@ -137,12 +139,12 @@ void record(){
 
 
 
-void normal(){
+void normal(){ // Turn the LED off
   digitalWrite(LED_PIN, LOW);
   recording = false;
 }
 
-void incrementFileNum(){
+void incrementFileNum(){ //Increment the file num in EEPROM
   fileNum = (int)EEPROM.read(FILELOG);
   EEPROM.write(FILELOG, fileNum+1);
 }
@@ -159,10 +161,10 @@ void setupSDCard(){
   Serial.println("card initialized.");
 }
 
-void setupLoadCell(){
+void setupLoadCell(){ //Update/remove?
   loadCell.begin(DOUT, CLK);
-  loadCell.set_scale(calibration_factor); //This value is obtained by using the SparkFun_HX711_Calibration sketch
-  loadCell.tare();  //Assuming there is no weight on the scale at start up, reset the scale to 0
+  loadCell.set_scale(calibration_factor); 
+  loadCell.tare(); 
 }
 
 
@@ -171,7 +173,7 @@ void setupLoadCell(){
 
 
 
-void checkButton(){
+void checkButton(){ //Basic button debouncing
    if (!digitalRead(BUTTON_PIN)){
     if (!checking) 
     {
