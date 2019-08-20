@@ -62,24 +62,8 @@ void setup() {
 
 void loop() {
 
-  checkButton();
-  
-  switch (state){
-    case -1: //Error State
-      LED = !LED;
-      digitalWrite(LED_PIN, LED);
-      delay(500);
-      break;
-    case 0: //Normal State
-      normal();
-      break;
-    case 1: //Recording State
-      record();
-      break;
-    default: //Should not reach
-      Serial.println("Case Error");
-      break;
-  }
+  record();
+ 
 }
 
 
