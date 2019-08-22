@@ -6,8 +6,8 @@
 
 #define calibration_factor -7050.0 //This value is obtained using the SparkFun_HX711_Calibration sketch
 
-#define DOUT 1
-#define CLK 0
+#define DOUT 4
+#define CLK 3
 #define LED_PIN 13
 #define BUTTON_PIN 11
 #define FILELOG 1
@@ -36,6 +36,7 @@ bool recording = false;
 //SD Card
 const int chipSelect = BUILTIN_SDCARD;
 int fileNum = 0;
+char* fileName; 
 
 
 
@@ -55,14 +56,19 @@ void setup() {
   incrementFileNum();
   setupSDCard();
   setupLoadCell();
-  delay(2000);
   digitalWrite(LED_PIN, LOW);
   
 }
 
 void loop() {
 
-  record();
+  if (state != -1) record();
+  else {
+    digitalWrite(LED_PIN, HIGH);
+    delay(500);
+    digitalWrite(LED_PIN, LOW);
+    delay(500);
+  }
  
 }
 
@@ -103,7 +109,8 @@ void record(){
     dataString += String(loadCell.read());
      
     // Open the data file
-    File dataFile = SD.open("dataLog.csv", FILE_WRITE);
+    
+    File dataFile = SD.open(fileName, FILE_WRITE);
   
     // If the file is available, write to it:
     if (dataFile) {
@@ -114,7 +121,7 @@ void record(){
     }  
     // if the file isn't open, pop up an error and set the state to Error
     else {
-      Serial.println("error opening datalog.csv");
+      Serial.println(fileName);
       state = -1;
     }  
   }
@@ -130,6 +137,10 @@ void normal(){ // Turn the LED off
 void incrementFileNum(){ //Increment the file num in EEPROM
   fileNum = (int)EEPROM.read(FILELOG);
   EEPROM.write(FILELOG, fileNum+1);
+
+  String fN = "data" + String(fileNum);
+  fN += ".csv";
+  fileName = fN.c_str();
 }
 
 
