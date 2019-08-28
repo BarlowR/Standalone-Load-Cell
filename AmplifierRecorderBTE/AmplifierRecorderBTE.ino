@@ -48,6 +48,8 @@ HX711 loadCell;
 void setup() {
   //Begin Serial
   Serial.begin(9600);
+  BTE.begin(9600);
+
   
   //Setup Pins
   pinMode(LED_PIN, OUTPUT);
@@ -61,7 +63,6 @@ void setup() {
   digitalWrite(LED_PIN, LOW);
 
   //Bluetooth Setup
-  BTE.begin(9600);
   
 }
 
@@ -129,8 +130,9 @@ void record(){
     }  
     // if the file isn't open, pop up an error and set the state to Error
     else {
-      Serial.println(fileName);
-      state = -1;
+      //Serial.println(fileName);
+      //state = -1;
+      
     }  
   }
 }
@@ -154,10 +156,10 @@ void incrementFileNum(){ //Increment the file num in EEPROM
 
 
 void setupSDCard(){
-  Serial.print("Initializing SD card...");
+  BTE.print("Initializing SD card...");
   if (!SD.begin(chipSelect)) {
-    Serial.println("Card failed, or not present");
-    state = -1;
+    BTE.println("Card failed, or not present");
+    //state = -1;
     return;
   }
   Serial.println("card initialized.");
@@ -181,7 +183,6 @@ void checkButton(){ //Basic button debouncing
       if (millis() - elapsedTime> pressTime) {
         if (!digitalRead(BUTTON_PIN)){
           Serial.println("switched");
-          incrementState();
           checking = false;
         }
       }
@@ -192,8 +193,4 @@ void checkButton(){ //Basic button debouncing
     Serial.println("bypass");
     checking = false;
   }
-}
-
-void incrementState(){
-  if (state != -1) state = (state +1)%states;
 }
